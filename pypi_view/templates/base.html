@@ -1,0 +1,15 @@
+<!doctype html>
+<html>
+    <head>
+        <link rel="stylesheet" href="{{url_for('static', path='/site.css')}}" />
+    </head>
+    <body class="page-{{page}}">
+        <h1>hello!</h1>
+
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.1/jquery.min.js"></script>
+        {% block extra_js %}{% endblock %}
+    </body>
+</html>
+
+{# vim: ft=jinja
+#}
