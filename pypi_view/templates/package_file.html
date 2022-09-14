@@ -1,0 +1,19 @@
+{% set page = 'package-file' %}
+{% extends 'base.html' %}
+
+{% block content %}
+    <h1>{{filename}}</h1>
+    <ul>
+        {% for entry in entries|sort(attribute="path") %}
+            <li>
+                <a
+                    href="{{url_for('package_file_archive_path', package=package, filename=filename, archive_path=entry.path)}}"
+                >{{entry.path}}</a>
+                ({{entry.size}} bytes)
+            </li>
+        {% endfor %}
+    </ul>
+{% endblock %}
+
+{# vim: ft=jinja
+#}

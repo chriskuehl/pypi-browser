@@ -5,6 +5,7 @@ import itertools
 import typing
 
 import aiofiles
+import aiofiles.os
 import httpx
 
 
@@ -13,8 +14,14 @@ PYPI = 'https://pypi.org'
 STORAGE_DIR = '/home/ckuehl/tmp/pypi-view'
 
 
+class PackageDoesNotExist(Exception):
+    pass
+
+
 async def package_metadata(client: httpx.AsyncClient, package: str) -> typing.Dict:
     resp = await client.get(f'{PYPI}/pypi/{package}/json')
+    if resp.status_code == 404:
+        raise PackageDoesNotExist(package)
     resp.raise_for_status()
     return resp.json()
 
@@ -48,11 +55,11 @@ async def _atomic_file(path: str, mode: str = 'w') -> typing.Any:
         try:
             yield f
         except:
-            os.remove(f.name)
+            await aiofiles.os.remove(f.name)
             raise
         else:
             # This is atomic since the temporary file was created in the same directory.
-            os.rename(f.name, path)
+            await aiofiles.os.rename(f.name, path)
 
 
 async def downloaded_file_path(package: str, filename: str) -> str:
@@ -62,7 +69,7 @@ async def downloaded_file_path(package: str, filename: str) -> str:
     it and may take a while.
     """
     stored_path = _storage_path(package, filename)
-    if os.path.exists(stored_path):
+    if await aiofiles.os.path.exists(stored_path):
         return stored_path
 
     async with httpx.AsyncClient() as client:
@@ -78,7 +85,7 @@ async def downloaded_file_path(package: str, filename: str) -> str:
         else:
             raise CannotFindFileError(package, filename)
 
-        os.makedirs(os.path.dirname(stored_path), exist_ok=True)
+        await aiofiles.os.makedirs(os.path.dirname(stored_path), exist_ok=True)
 
         async with _atomic_file(stored_path, 'wb') as f:
             async with client.stream('GET', url) as resp:
