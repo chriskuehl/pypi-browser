@@ -1,0 +1,19 @@
+{% set page = 'package' %}
+{% extends 'base.html' %}
+
+{% block content %}
+    <h1>{{package}}</h1>
+    {% for version in version_to_files|sort %}
+        <h2>{{version}}</h2>
+        <ul>
+            {% for file in version_to_files[version]|sort %}
+                <li>
+                    <a href="{{url_for('package_file', package=package, filename=file)}}">{{file}}</a>
+                </li>
+            {% endfor %}
+        </ul>
+    {% endfor %}
+{% endblock %}
+
+{# vim: ft=jinja
+#}
