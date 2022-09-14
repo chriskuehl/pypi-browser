@@ -2,6 +2,7 @@
 <html>
     <head>
         <link rel="stylesheet" href="{{url_for('static', path='/site.css')}}" />
+        {% block extra_head %}{% endblock %}
     </head>
     <body class="page-{{page}}">
         {% block content %}{% endblock %}

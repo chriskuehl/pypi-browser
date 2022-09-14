@@ -1,0 +1,24 @@
+{% set page = 'package-file-archive-path' %}
+{% extends 'base.html' %}
+
+{% block extra_head %}
+    <style>
+        {{extra_css|safe}}
+    </style>
+{% endblock %}
+
+{% block extra_js %}
+    <script>
+        {{extra_js|safe}}
+    </script>
+{% endblock %}
+
+{% block content %}
+    <h1>{{package}}: {{filename}}</h1>
+    <h2>{{archive_path}}</h2>
+    {{rendered_text|safe}}
+    <p><a href="?raw">View Raw</a></p>
+{% endblock %}
+
+{# vim: ft=jinja
+#}
