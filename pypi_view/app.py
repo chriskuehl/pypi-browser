@@ -4,28 +4,26 @@ import mimetypes
 import os.path
 import re
 
-import pygments.lexers
-import pygments.lexers.special
 import fluffy_code.code
 import fluffy_code.prebuilt_styles
+import pygments.lexers.special
 from identify import identify
-from starlette.middleware.base import BaseHTTPMiddleware
-from starlette.middleware import Middleware
 from starlette.applications import Starlette
-from starlette.staticfiles import StaticFiles
+from starlette.middleware import Middleware
+from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
-from starlette.responses import Response
 from starlette.responses import PlainTextResponse
 from starlette.responses import RedirectResponse
+from starlette.responses import Response
 from starlette.responses import StreamingResponse
-from starlette.routing import Route
+from starlette.staticfiles import StaticFiles
 from starlette.templating import Jinja2Templates
 
 from pypi_view import packaging
 from pypi_view import pypi
 
 PACKAGE_TYPE_NOT_SUPPORTED_ERROR = (
-    "Sorry, this package type is not yet supported (only .zip and .whl supported currently)."
+    'Sorry, this package type is not yet supported (only .zip and .whl supported currently).'
 )
 TEXT_RENDER_FILESIZE_LIMIT = 20 * 1024  # 20 KiB
 
@@ -66,12 +64,12 @@ class CacheControlHeaderMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request, call_next):
         response = await call_next(request)
         # TODO: There should be a better way to do this...
-        response.headers["Cache-Control"] = "no-cache"
+        response.headers['Cache-Control'] = 'no-cache'
         return response
 
 
 app = Starlette(
-    debug=os.environ.get("PYPI_VIEW_DEBUG") == "1",
+    debug=os.environ.get('PYPI_VIEW_DEBUG') == '1',
     middleware=[
         Middleware(CacheControlHeaderMiddleware),
     ],
@@ -79,50 +77,50 @@ app = Starlette(
 app.mount('/static', StaticFiles(directory=os.path.join(install_root, 'static')), name='static')
 
 templates = Jinja2Templates(
-    directory=os.path.join(install_root, "templates"),
+    directory=os.path.join(install_root, 'templates'),
 )
 
 
 @app.route('/')
 async def home(request: Request) -> Response:
-    return templates.TemplateResponse("home.html", {"request": request})
+    return templates.TemplateResponse('home.html', {'request': request})
 
 
 @app.route('/package/{package}')
 async def package(request: Request) -> Response:
-    package_name  = request.path_params["package"]
+    package_name = request.path_params['package']
     try:
         version_to_files = await pypi.files_for_package(package_name)
     except pypi.PackageDoesNotExist:
         return PlainTextResponse(
-            f"Package {package_name!r} does not exist on PyPI.",
+            f'Package {package_name!r} does not exist on PyPI.',
             status_code=404,
         )
     else:
         return templates.TemplateResponse(
-            "package.html",
+            'package.html',
             {
-                "request": request,
-                "package": package_name,
-                "version_to_files": version_to_files,
+                'request': request,
+                'package': package_name,
+                'version_to_files': version_to_files,
             },
         )
 
 
 @app.route('/package/{package}/{filename}')
 async def package_file(request: Request) -> Response:
-    package_name = request.path_params["package"]
-    file_name = request.path_params["filename"]
+    package_name = request.path_params['package']
+    file_name = request.path_params['filename']
     try:
         archive = await pypi.downloaded_file_path(package_name, file_name)
     except pypi.PackageDoesNotExist:
         return PlainTextResponse(
-            f"Package {package_name!r} does not exist on PyPI.",
+            f'Package {package_name!r} does not exist on PyPI.',
             status_code=404,
         )
     except pypi.CannotFindFileError:
         return PlainTextResponse(
-            f"File {file_name!r} does not exist for package {package_name!r}.",
+            f'File {file_name!r} does not exist for package {package_name!r}.',
             status_code=404,
         )
 
@@ -138,14 +136,15 @@ async def package_file(request: Request) -> Response:
     metadata_entries = [
         entry
         for entry in entries
-        if re.match(r'(?:[^/]+\.dist-info/METADATA|^[^/]+/PKG-INFO)$', entry.path) and entry.size <= TEXT_RENDER_FILESIZE_LIMIT
+        if re.match(r'(?:[^/]+\.dist-info/METADATA|^[^/]+/PKG-INFO)$', entry.path)
+        and entry.size <= TEXT_RENDER_FILESIZE_LIMIT
     ]
     if len(metadata_entries) > 0:
         metadata_path = metadata_entries[0].path
         metadata = {}
 
         async with package.open_from_archive(metadata_path) as f:
-            metadata_file = io.StringIO((await f.read()).decode("utf8", errors="ignore"))
+            metadata_file = io.StringIO((await f.read()).decode('utf8', errors='ignore'))
 
         message = email.message_from_file(metadata_file)
         metadata = {
@@ -156,35 +155,34 @@ async def package_file(request: Request) -> Response:
         metadata_path = None
         metadata = {}
 
-
     return templates.TemplateResponse(
-        "package_file.html",
+        'package_file.html',
         {
-            "request": request,
-            "package": package_name,
-            "filename": file_name,
-            "entries": entries,
-            "metadata_path": metadata_path,
-            "metadata": metadata,
+            'request': request,
+            'package': package_name,
+            'filename': file_name,
+            'entries': entries,
+            'metadata_path': metadata_path,
+            'metadata': metadata,
         },
     )
 
 
 @app.route('/package/{package}/{filename}/{archive_path:path}')
 async def package_file_archive_path(request: Request) -> Response:
-    package_name = request.path_params["package"]
-    file_name = request.path_params["filename"]
-    archive_path = request.path_params["archive_path"]
+    package_name = request.path_params['package']
+    file_name = request.path_params['filename']
+    archive_path = request.path_params['archive_path']
     try:
         archive = await pypi.downloaded_file_path(package_name, file_name)
     except pypi.PackageDoesNotExist:
         return PlainTextResponse(
-            f"Package {package_name!r} does not exist on PyPI.",
+            f'Package {package_name!r} does not exist on PyPI.',
             status_code=404,
         )
     except pypi.CannotFindFileError:
         return PlainTextResponse(
-            f"File {file_name!r} does not exist for package {package_name!r}.",
+            f'File {file_name!r} does not exist for package {package_name!r}.',
             status_code=404,
         )
     try:
@@ -199,7 +197,7 @@ async def package_file_archive_path(request: Request) -> Response:
     matching_entries = [entry for entry in entries if entry.path == archive_path]
     if len(matching_entries) == 0:
         return PlainTextResponse(
-            f"Path {archive_path!r} does not exist in archive.",
+            f'Path {archive_path!r} does not exist in archive.',
             status_code=404,
         )
     entry = matching_entries[0]
@@ -216,11 +214,11 @@ async def package_file_archive_path(request: Request) -> Response:
 
         return StreamingResponse(
             transfer_file(),
-            media_type=mimetype if (mimetype or "").startswith(MIME_WHITELIST) else None,
-            headers={"Content-Length": str(entry.size)},
+            media_type=mimetype if (mimetype or '').startswith(MIME_WHITELIST) else None,
+            headers={'Content-Length': str(entry.size)},
         )
 
-    if "raw" in request.query_params:
+    if 'raw' in request.query_params:
         return _transfer_raw()
 
     # There are a few cases to handle here:
@@ -258,13 +256,13 @@ async def package_file_archive_path(request: Request) -> Response:
                 lexer = pygments.lexers.special.TextLexer()
 
             return templates.TemplateResponse(
-                "package_file_archive_path.html",
+                'package_file_archive_path.html',
                 {
-                    "request": request,
-                    "package": package_name,
-                    "filename": file_name,
-                    "archive_path": archive_path,
-                    "rendered_text": fluffy_code.code.render(
+                    'request': request,
+                    'package': package_name,
+                    'filename': file_name,
+                    'archive_path': archive_path,
+                    'rendered_text': fluffy_code.code.render(
                         first_chunk,
                         style_config=style_config,
                         highlight_config=fluffy_code.code.HighlightConfig(
@@ -272,32 +270,32 @@ async def package_file_archive_path(request: Request) -> Response:
                             highlight_diff=False,
                         ),
                     ),
-                    "extra_css": fluffy_code.code.get_global_css() + "\n" + style_config.css,
-                    "extra_js": fluffy_code.code.get_global_javascript(),
+                    'extra_css': fluffy_code.code.get_global_css() + '\n' + style_config.css,
+                    'extra_js': fluffy_code.code.get_global_javascript(),
                 },
             )
         else:
             # Case 2: too long to syntax highlight.
             return templates.TemplateResponse(
-                "package_file_archive_path_cannot_render.html",
+                'package_file_archive_path_cannot_render.html',
                 {
-                    "request": request,
-                    "package": package_name,
-                    "filename": file_name,
-                    "archive_path": archive_path,
-                    "error": "This file is too long to syntax highlight.",
+                    'request': request,
+                    'package': package_name,
+                    'filename': file_name,
+                    'archive_path': archive_path,
+                    'error': 'This file is too long to syntax highlight.',
                 },
             )
 
     # Case 4: link to binary
     return templates.TemplateResponse(
-        "package_file_archive_path_cannot_render.html",
+        'package_file_archive_path_cannot_render.html',
         {
-            "request": request,
-            "package": package_name,
-            "filename": file_name,
-            "archive_path": archive_path,
-            "error": "This file appears to be a binary.",
+            'request': request,
+            'package': package_name,
+            'filename': file_name,
+            'archive_path': archive_path,
+            'error': 'This file appears to be a binary.',
         },
     )
 

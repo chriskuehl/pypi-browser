@@ -51,7 +51,7 @@ class AsyncArchiveFile:
     def __init__(self, file_: ArchiveFile) -> None:
         self.file_ = file_
 
-    async def __aenter__(self) -> "AsyncArchiveFile":
+    async def __aenter__(self) -> 'AsyncArchiveFile':
         return self
 
     async def __aexit__(self, exc_t, exc_v, exc_tb) -> None:
@@ -68,13 +68,13 @@ class Package:
     path: str
 
     @classmethod
-    def from_path(cls, path: str) -> "Package":
-        name = base64.b64decode(os.path.basename(path).encode("ascii")).decode("utf8")
+    def from_path(cls, path: str) -> 'Package':
+        name = base64.b64decode(os.path.basename(path).encode('ascii')).decode('utf8')
 
-        if name.endswith(".whl"):
+        if name.endswith('.whl'):
             package_type = PackageType.WHEEL
             package_format = PackageFormat.ZIPFILE
-        elif name.endswith(".zip"):
+        elif name.endswith('.zip'):
             package_type = PackageType.SDIST
             package_format = PackageFormat.ZIPFILE
         else:

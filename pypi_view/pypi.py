@@ -1,10 +1,9 @@
 import base64
 import contextlib
-import os.path
 import itertools
+import os.path
 import typing
 
-import aiofiles
 import aiofiles.os
 import httpx
 
@@ -31,8 +30,8 @@ async def files_for_package(package: str) -> typing.Dict[str, typing.Set[str]]:
         metadata = await package_metadata(client, package)
 
     return {
-        version: {file_["filename"] for file_ in files}
-        for version, files in metadata["releases"].items()
+        version: {file_['filename'] for file_ in files}
+        for version, files in metadata['releases'].items()
     }
 
 
@@ -45,16 +44,17 @@ def _storage_path(package: str, filename: str) -> str:
         STORAGE_DIR,
         # Base64-encoding the names to calculate the storage path just to be
         # extra sure to avoid any path traversal vulnerabilities.
-        base64.urlsafe_b64encode(package.encode("utf8")).decode("ascii"),
-        base64.urlsafe_b64encode(filename.encode("utf8")).decode("ascii"),
+        base64.urlsafe_b64encode(package.encode('utf8')).decode('ascii'),
+        base64.urlsafe_b64encode(filename.encode('utf8')).decode('ascii'),
     )
+
 
 @contextlib.asynccontextmanager
 async def _atomic_file(path: str, mode: str = 'w') -> typing.Any:
     async with aiofiles.tempfile.NamedTemporaryFile(mode, dir=os.path.dirname(path), delete=False) as f:
         try:
             yield f
-        except:
+        except BaseException:
             await aiofiles.os.remove(f.name)
             raise
         else:
@@ -78,9 +78,9 @@ async def downloaded_file_path(package: str, filename: str) -> str:
         # Parsing versions from non-wheel Python packages isn't perfectly
         # reliable, so just search through all releases until we find a
         # matching file.
-        for file_ in itertools.chain.from_iterable(metadata["releases"].values()):
-            if file_["filename"] == filename:
-                url = file_["url"]
+        for file_ in itertools.chain.from_iterable(metadata['releases'].values()):
+            if file_['filename'] == filename:
+                url = file_['url']
                 break
         else:
             raise CannotFindFileError(package, filename)
