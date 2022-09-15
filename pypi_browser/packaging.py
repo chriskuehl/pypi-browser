@@ -46,6 +46,7 @@ def _package_entries_from_zipfile(path: str) -> typing.Set[PackageEntry]:
                 mode=stat.filemode(entry.external_attr >> 16),
             )
             for entry in zf.infolist()
+            if not entry.is_dir()
         }
 
 
