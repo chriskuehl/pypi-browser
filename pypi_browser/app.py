@@ -22,8 +22,8 @@ from starlette.responses import StreamingResponse
 from starlette.staticfiles import StaticFiles
 from starlette.templating import Jinja2Templates
 
-import pypi_view.packaging
-from pypi_view import pypi
+import pypi_browser.packaging
+from pypi_browser import pypi
 
 PACKAGE_TYPE_NOT_SUPPORTED_ERROR = (
     'Sorry, this package type is not yet supported (only .zip and .whl supported currently).'
@@ -66,7 +66,7 @@ class CacheControlHeaderMiddleware(BaseHTTPMiddleware):
 
 
 app = Starlette(
-    debug=os.environ.get('PYPI_VIEW_DEBUG') == '1',
+    debug=os.environ.get('PYPI_BROWSER_DEBUG') == '1',
     middleware=[
         Middleware(CacheControlHeaderMiddleware),
     ],
@@ -105,7 +105,7 @@ async def home(request: Request) -> Response:
 @app.route('/package/{package}')
 async def package(request: Request) -> Response:
     package_name = request.path_params['package']
-    normalized_package_name = pypi_view.packaging.pep426_normalize(package_name)
+    normalized_package_name = pypi_browser.packaging.pep426_normalize(package_name)
     if package_name != normalized_package_name:
         return RedirectResponse(request.url_for('package', package=normalized_package_name))
 
@@ -138,7 +138,7 @@ async def package_file(request: Request) -> Response:
     package_name = request.path_params['package']
     file_name = request.path_params['filename']
 
-    normalized_package_name = pypi_view.packaging.pep426_normalize(package_name)
+    normalized_package_name = pypi_browser.packaging.pep426_normalize(package_name)
     if package_name != normalized_package_name:
         return RedirectResponse(
             request.url_for(
@@ -162,8 +162,8 @@ async def package_file(request: Request) -> Response:
         )
 
     try:
-        package = pypi_view.packaging.Package.from_path(archive)
-    except pypi_view.packaging.UnsupportedPackageType:
+        package = pypi_browser.packaging.Package.from_path(archive)
+    except pypi_browser.packaging.UnsupportedPackageType:
         return PlainTextResponse(
             PACKAGE_TYPE_NOT_SUPPORTED_ERROR,
             status_code=501,
@@ -211,7 +211,7 @@ async def package_file_archive_path(request: Request) -> Response:
     file_name = request.path_params['filename']
     archive_path = request.path_params['archive_path']
 
-    normalized_package_name = pypi_view.packaging.pep426_normalize(package_name)
+    normalized_package_name = pypi_browser.packaging.pep426_normalize(package_name)
     if package_name != normalized_package_name:
         return RedirectResponse(
             request.url_for(
@@ -235,8 +235,8 @@ async def package_file_archive_path(request: Request) -> Response:
             status_code=404,
         )
     try:
-        package = pypi_view.packaging.Package.from_path(archive)
-    except pypi_view.packaging.UnsupportedPackageType:
+        package = pypi_browser.packaging.Package.from_path(archive)
+    except pypi_browser.packaging.UnsupportedPackageType:
         return PlainTextResponse(
             PACKAGE_TYPE_NOT_SUPPORTED_ERROR,
             status_code=501,

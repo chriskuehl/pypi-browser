@@ -1,4 +1,4 @@
-from pypi_view import app
+from pypi_browser import app
 
 
 def test_app_smoketest():

@@ -1,11 +1,11 @@
 [tool.poetry]
-name = "pypi-view"
+name = "pypi-browser"
 version = "0.0.0"
-description = "PyPI package viewing web application"
+description = "PyPI package browsing web application"
 authors = ["Chris Kuehl <ckuehl@ckuehl.me>"]
 license = "Apache-2.0"
 readme = "README.md"
-packages = [{include = "pypi_view"}]
+packages = [{include = "pypi_browser"}]
 
 [tool.poetry.dependencies]
 python = "^3.9"

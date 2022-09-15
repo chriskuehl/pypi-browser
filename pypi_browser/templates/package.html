@@ -1,8 +1,9 @@
 {% set page = 'package' %}
+{% set selected_package_name = package %}
 {% extends '_base.html' %}
 {% import '_macros.html' as macros %}
 
-{% block title %}{{package}} | PyPi View{% endblock %}
+{% block title %}{{package}} | PyPI Browser{% endblock %}
 
 {% block content %}
     <h1 class="font-monospace">{{package}}</h1>
