@@ -57,7 +57,7 @@ class AsyncArchiveFile:
     async def __aexit__(self, exc_t, exc_v, exc_tb) -> None:
         await asyncio.to_thread(self.file_.close)
 
-    async def read(self, n_bytes: typing.Optional[int]) -> bytes:
+    async def read(self, n_bytes: typing.Optional[int] = None) -> bytes:
         return await asyncio.to_thread(self.file_.read, n_bytes)
 
 

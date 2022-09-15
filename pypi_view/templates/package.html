@@ -1,6 +1,8 @@
 {% set page = 'package' %}
 {% extends 'base.html' %}
 
+{% block title %}{{package}} | PyPi View{% endblock %}
+
 {% block content %}
     <h1>{{package}}</h1>
     {% for version in version_to_files|sort %}

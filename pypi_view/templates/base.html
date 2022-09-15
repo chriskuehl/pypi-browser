@@ -1,12 +1,41 @@
 <!doctype html>
-<html>
+<html lang="en">
     <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="stylesheet" href="{{url_for('static', path='/bootstrap-5.2.1.min.css')}}" />
         <link rel="stylesheet" href="{{url_for('static', path='/site.css')}}" />
+        <title>{% block title %}{% endblock %}</title>
         {% block extra_head %}{% endblock %}
     </head>
     <body class="page-{{page}}">
-        {% block content %}{% endblock %}
+        <nav class="navbar navbar-dark bg-dark">
+            <div class="container">
+                <a class="navbar-brand" href="{{url_for('home')}}">PyPi View</a>
+                <form class="d-flex" method="GET" action="{{url_for('search')}}">
+                   <input
+                       id="package-search"
+                       class="form-control me-2"
+                       type="text"
+                       name="package"
+                       placeholder="Package name"
+                       value="{{selected_package_name}}"
+                   />
+                   <button class="btn btn-outline-success" type="submit">Go</button>
+                </form>
+                <div class="collapse navbar-collapse">
+                    foo
+                </div>
+            </div>
+        </nav>
+
+        <div class="container">
+            {% block content %}{% endblock %}
+        </div>
+
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.1/jquery.min.js"></script>
+        <script src="{{url_for('static', path='/bootstrap-5.2.1.min.js')}}"></script>
+        <script src="{{url_for('static', path='/site.js')}}"></script>
         {% block extra_js %}{% endblock %}
     </body>
 </html>

@@ -1,5 +1,8 @@
 {% set page = 'package-file-archive-path' %}
+{% set selected_package_name = package %}
 {% extends 'base.html' %}
+
+{% block title %}{{archive_path}} | {{filename}} | {{package}} | PyPi View{% endblock %}
 
 {% block extra_head %}
     <style>

@@ -1,17 +1,22 @@
+import email
 import io
 import mimetypes
 import os.path
+import re
 
 import pygments.lexers
 import pygments.lexers.special
 import fluffy_code.code
 import fluffy_code.prebuilt_styles
 from identify import identify
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.middleware import Middleware
 from starlette.applications import Starlette
 from starlette.staticfiles import StaticFiles
 from starlette.requests import Request
 from starlette.responses import Response
 from starlette.responses import PlainTextResponse
+from starlette.responses import RedirectResponse
 from starlette.responses import StreamingResponse
 from starlette.routing import Route
 from starlette.templating import Jinja2Templates
@@ -55,7 +60,22 @@ INLINE_DISPLAY_MIME_WHITELIST = (
 
 install_root = os.path.dirname(__file__)
 
-app = Starlette(debug=os.environ.get("PYPI_VIEW_DEBUG") == "1")
+
+class CacheControlHeaderMiddleware(BaseHTTPMiddleware):
+
+    async def dispatch(self, request, call_next):
+        response = await call_next(request)
+        # TODO: There should be a better way to do this...
+        response.headers["Cache-Control"] = "no-cache"
+        return response
+
+
+app = Starlette(
+    debug=os.environ.get("PYPI_VIEW_DEBUG") == "1",
+    middleware=[
+        Middleware(CacheControlHeaderMiddleware),
+    ],
+)
 app.mount('/static', StaticFiles(directory=os.path.join(install_root, 'static')), name='static')
 
 templates = Jinja2Templates(
@@ -115,6 +135,28 @@ async def package_file(request: Request) -> Response:
         )
 
     entries = await package.entries()
+    metadata_entries = [
+        entry
+        for entry in entries
+        if re.match(r'(?:[^/]+\.dist-info/METADATA|^[^/]+/PKG-INFO)$', entry.path) and entry.size <= TEXT_RENDER_FILESIZE_LIMIT
+    ]
+    if len(metadata_entries) > 0:
+        metadata_path = metadata_entries[0].path
+        metadata = {}
+
+        async with package.open_from_archive(metadata_path) as f:
+            metadata_file = io.StringIO((await f.read()).decode("utf8", errors="ignore"))
+
+        message = email.message_from_file(metadata_file)
+        metadata = {
+            key: message.get_all(key)
+            for key in set(message.keys())
+        }
+    else:
+        metadata_path = None
+        metadata = {}
+
+
     return templates.TemplateResponse(
         "package_file.html",
         {
@@ -122,6 +164,8 @@ async def package_file(request: Request) -> Response:
             "package": package_name,
             "filename": file_name,
             "entries": entries,
+            "metadata_path": metadata_path,
+            "metadata": metadata,
         },
     )
 
@@ -172,7 +216,7 @@ async def package_file_archive_path(request: Request) -> Response:
 
         return StreamingResponse(
             transfer_file(),
-            media_type=mimetype if mimetype.startswith(MIME_WHITELIST) else None,
+            media_type=mimetype if (mimetype or "").startswith(MIME_WHITELIST) else None,
             headers={"Content-Length": str(entry.size)},
         )
 
@@ -256,3 +300,8 @@ async def package_file_archive_path(request: Request) -> Response:
             "error": "This file appears to be a binary.",
         },
     )
+
+
+@app.route('/search')
+async def search(request: Request) -> Response:
+    return RedirectResponse(request.url_for('package', package=request.query_params['package']))
