@@ -113,7 +113,7 @@ testing = ["covdefaults (>=2.2)", "coverage (>=6.4.2)", "pytest (>=7.1.2)", "pyt
 
 [[package]]
 name = "fluffy-code"
-version = "0.0.1"
+version = "0.0.2"
 description = "A developer-friendly code rendering library for Python web applications"
 category = "main"
 optional = false
@@ -520,7 +520,7 @@ testing = ["coverage (>=6.2)", "coverage-enable-subprocess (>=1)", "flaky (>=3.7
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "d6bb8eee874519b5ec3382fdd14c22f35471463a768535478c7f8174e7538ea5"
+content-hash = "b3c4e675417e9da8650aa187966b18147debeee234d5e06504404d50e2b57ce3"
 
 [metadata.files]
 aiofiles = [
@@ -616,8 +616,8 @@ filelock = [
     {file = "filelock-3.8.0.tar.gz", hash = "sha256:55447caa666f2198c5b6b13a26d2084d26fa5b115c00d065664b2124680c4edc"},
 ]
 fluffy-code = [
-    {file = "fluffy-code-0.0.1.tar.gz", hash = "sha256:acdff0f44e32a5b42078a79f20e3417937844609bcb97d65f4123feb8704c2d6"},
-    {file = "fluffy_code-0.0.1-py3-none-any.whl", hash = "sha256:b233a7b9386f1b2b2480e5039995ab93b97482841b79c99ace8afffd305fb1b4"},
+    {file = "fluffy-code-0.0.2.tar.gz", hash = "sha256:94809aaf2d4af5af67546bf3c2f7657270d837867e68b0a5116865180398c763"},
+    {file = "fluffy_code-0.0.2-py3-none-any.whl", hash = "sha256:248beb500d2d5885405ef23d0a3a4b7dcf22f6b1120de7482f1cbb0cba1c009e"},
 ]
 h11 = [
     {file = "h11-0.12.0-py3-none-any.whl", hash = "sha256:36a3cb8c0a032f56e2da7084577878a035d3b61d104230d4bd49c0c6b555a9c6"},

@@ -1,3 +1,8 @@
+html {
+    /* Disable smooth scrolling set by Bootstrap */
+    scroll-behavior: auto !important;
+}
+
 .breadcrumb {
     --bs-breadcrumb-divider: '>';
 }
@@ -8,4 +13,9 @@
 
 .page-package-file-archive-path .codeview {
     border: solid 1px #ddd;
+    font-size: 14px !important;
+}
+
+.page-package-file-archive-path .codeview pre {
+    font-size: 14px;
 }

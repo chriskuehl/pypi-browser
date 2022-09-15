@@ -290,16 +290,19 @@ async def package_file_archive_path(request: Request) -> Response:
 
     if is_text:
         if entry.size <= TEXT_RENDER_FILESIZE_LIMIT:
+            text = first_chunk.decode('utf8', errors='replace')
+
             # Case 1: render syntax-highlighted.
             style_config = fluffy_code.prebuilt_styles.default_style()
 
             try:
                 lexer = pygments.lexers.guess_lexer_for_filename(
                     archive_path,
-                    first_chunk,
+                    text,
+                    stripnl=False,
                 )
             except pygments.lexers.ClassNotFound:
-                lexer = pygments.lexers.special.TextLexer()
+                lexer = pygments.lexers.special.TextLexer(stripnl=False)
 
             return templates.TemplateResponse(
                 'package_file_archive_path.html',
@@ -309,7 +312,7 @@ async def package_file_archive_path(request: Request) -> Response:
                     'filename': file_name,
                     'archive_path': archive_path,
                     'rendered_text': fluffy_code.code.render(
-                        first_chunk,
+                        text,
                         style_config=style_config,
                         highlight_config=fluffy_code.code.HighlightConfig(
                             lexer=lexer,
