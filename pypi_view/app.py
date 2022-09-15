@@ -52,17 +52,6 @@ MIME_WHITELIST = (
     'video/',
 )
 
-# Mime types which should be displayed inline in the browser, as opposed to
-# being downloaded. This is used to populate the Content-Disposition header.
-# Only binary MIMEs need to be whitelisted here, since detected non-binary
-# files are always inline.
-INLINE_DISPLAY_MIME_WHITELIST = (
-    'application/pdf',
-    'audio/',
-    'image/',
-    'video/',
-)
-
 
 install_root = os.path.dirname(__file__)
 
@@ -290,16 +279,8 @@ async def package_file_archive_path(request: Request) -> Response:
     #   (1) Reasonable-length text: render syntax highlighted in HTML
     #   (2) Extremely long text: don't render, just show error and offer
     #       link to the raw file
-    #   (3) Binary file that browsers can display (e.g. image): render raw
-    #   (4) Binary file that browsers cannot display (e.g. tarball): don't
-    #       render, just show warning and link to the raw file
-    #
-    # Note that except for images, the file extension isn't too useful to
-    # determine the actual content since there are lots of files without
-    # extensions (and lots of extensions not recognized by `mimetypes`).
-    if mimetype is not None and mimetype.startswith(INLINE_DISPLAY_MIME_WHITELIST):
-        # Case 3: render binary
-        return _transfer_raw()
+    #   (3) Binary file: don't render, just show warning and link to the raw
+    #       file
 
     # Figure out if it looks like text or not.
     async with package.open_from_archive(archive_path) as f:
@@ -354,7 +335,7 @@ async def package_file_archive_path(request: Request) -> Response:
                 },
             )
 
-    # Case 4: link to binary
+    # Case 3: link to binary
     return templates.TemplateResponse(
         'package_file_archive_path.html',
         {
