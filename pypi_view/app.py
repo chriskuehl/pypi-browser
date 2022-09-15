@@ -1,11 +1,13 @@
 import email
 import io
+import itertools
 import mimetypes
 import os.path
 import re
 
 import fluffy_code.code
 import fluffy_code.prebuilt_styles
+import packaging.version
 import pygments.lexers.special
 from identify import identify
 from starlette.applications import Starlette
@@ -19,13 +21,18 @@ from starlette.responses import StreamingResponse
 from starlette.staticfiles import StaticFiles
 from starlette.templating import Jinja2Templates
 
-from pypi_view import packaging
+import pypi_view.packaging
 from pypi_view import pypi
 
 PACKAGE_TYPE_NOT_SUPPORTED_ERROR = (
     'Sorry, this package type is not yet supported (only .zip and .whl supported currently).'
 )
-TEXT_RENDER_FILESIZE_LIMIT = 20 * 1024  # 20 KiB
+
+ONE_KB = 2**10
+ONE_MB = 2**20
+ONE_GB = 2**30
+
+TEXT_RENDER_FILESIZE_LIMIT = 50 * ONE_KB
 
 # Mime types which are allowed to be presented as detected.
 # TODO: I think we actually only need to prevent text/html (and any HTML
@@ -81,6 +88,25 @@ templates = Jinja2Templates(
 )
 
 
+def _pluralize(n: int) -> str:
+    return '' if n == 1 else 's'
+
+
+def _human_size(size: int) -> str:
+    if size >= ONE_GB:
+        return f'{size / ONE_GB:.1f} GiB'
+    elif size >= ONE_MB:
+        return f'{size / ONE_MB:.1f} MiB'
+    elif size >= ONE_KB:
+        return f'{size / ONE_KB:.1f} KiB'
+    else:
+        return '{} {}{}'.format(size, 'byte', _pluralize(size))
+
+
+templates.env.filters['human_size'] = _human_size
+templates.env.filters['pluralize'] = _pluralize
+
+
 @app.route('/')
 async def home(request: Request) -> Response:
     return templates.TemplateResponse('home.html', {'request': request})
@@ -89,6 +115,10 @@ async def home(request: Request) -> Response:
 @app.route('/package/{package}')
 async def package(request: Request) -> Response:
     package_name = request.path_params['package']
+    normalized_package_name = pypi_view.packaging.pep426_normalize(package_name)
+    if package_name != normalized_package_name:
+        return RedirectResponse(request.url_for('package', package=normalized_package_name))
+
     try:
         version_to_files = await pypi.files_for_package(package_name)
     except pypi.PackageDoesNotExist:
@@ -97,12 +127,18 @@ async def package(request: Request) -> Response:
             status_code=404,
         )
     else:
+        version_to_files_sorted = sorted(
+            version_to_files.items(),
+            key=lambda item: packaging.version.parse(item[0]),
+            reverse=True,
+        )
         return templates.TemplateResponse(
             'package.html',
             {
                 'request': request,
                 'package': package_name,
-                'version_to_files': version_to_files,
+                'version_to_files': version_to_files_sorted,
+                'total_files': len(set(itertools.chain.from_iterable(version_to_files.values()))),
             },
         )
 
@@ -111,6 +147,17 @@ async def package(request: Request) -> Response:
 async def package_file(request: Request) -> Response:
     package_name = request.path_params['package']
     file_name = request.path_params['filename']
+
+    normalized_package_name = pypi_view.packaging.pep426_normalize(package_name)
+    if package_name != normalized_package_name:
+        return RedirectResponse(
+            request.url_for(
+                'package_file',
+                package=normalized_package_name,
+                filename=file_name,
+            ),
+        )
+
     try:
         archive = await pypi.downloaded_file_path(package_name, file_name)
     except pypi.PackageDoesNotExist:
@@ -125,8 +172,8 @@ async def package_file(request: Request) -> Response:
         )
 
     try:
-        package = packaging.Package.from_path(archive)
-    except packaging.UnsupportedPackageType:
+        package = pypi_view.packaging.Package.from_path(archive)
+    except pypi_view.packaging.UnsupportedPackageType:
         return PlainTextResponse(
             PACKAGE_TYPE_NOT_SUPPORTED_ERROR,
             status_code=501,
@@ -173,6 +220,18 @@ async def package_file_archive_path(request: Request) -> Response:
     package_name = request.path_params['package']
     file_name = request.path_params['filename']
     archive_path = request.path_params['archive_path']
+
+    normalized_package_name = pypi_view.packaging.pep426_normalize(package_name)
+    if package_name != normalized_package_name:
+        return RedirectResponse(
+            request.url_for(
+                'package_file_archive_path',
+                package=normalized_package_name,
+                filename=file_name,
+                archive_path=archive_path,
+            ),
+        )
+
     try:
         archive = await pypi.downloaded_file_path(package_name, file_name)
     except pypi.PackageDoesNotExist:
@@ -186,8 +245,8 @@ async def package_file_archive_path(request: Request) -> Response:
             status_code=404,
         )
     try:
-        package = packaging.Package.from_path(archive)
-    except packaging.UnsupportedPackageType:
+        package = pypi_view.packaging.Package.from_path(archive)
+    except pypi_view.packaging.UnsupportedPackageType:
         return PlainTextResponse(
             PACKAGE_TYPE_NOT_SUPPORTED_ERROR,
             status_code=501,

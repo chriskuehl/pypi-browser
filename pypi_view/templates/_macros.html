@@ -1,0 +1,12 @@
+{% macro package_type_pill(filename) %}
+    {% if filename.endswith(".whl") %}
+        <span class="badge text-bg-success">Wheel</span>
+    {% elif filename.endswith(".egg") %}
+        <span class="badge text-bg-warning">Egg</span>
+    {% else %}
+        <span class="badge text-bg-secondary">Source distribution</span>
+    {% endif %}
+{% endmacro %}
+
+{# vim: ft=jinja
+#}

@@ -1,19 +1,27 @@
 {% set page = 'package' %}
-{% extends 'base.html' %}
+{% extends '_base.html' %}
+{% import '_macros.html' as macros %}
 
 {% block title %}{{package}} | PyPi View{% endblock %}
 
 {% block content %}
     <h1>{{package}}</h1>
-    {% for version in version_to_files|sort %}
-        <h2>{{version}}</h2>
-        <ul>
-            {% for file in version_to_files[version]|sort %}
-                <li>
-                    <a href="{{url_for('package_file', package=package, filename=file)}}">{{file}}</a>
-                </li>
-            {% endfor %}
-        </ul>
+    <p>
+    <tt>{{package}}</tt> has {{version_to_files|length}} version{{version_to_files|length|pluralize}} and {{total_files}} file{{total_files|pluralize}}.
+        Select a file below to explore it.
+    </p>
+    {% for version, files in version_to_files %}
+        <div class="card bg-light mb-3">
+            <div class="card-header"><h5 class="mb-0">{{version}}</h5></div>
+            <div class="list-group list-group-flush">
+                {% for file in files|sort %}
+                    <a class="list-group-item list-group-item-action" href="{{url_for('package_file', package=package, filename=file)}}">
+                        <span class="font-monospace small">{{file}}</span>
+                        {{macros.package_type_pill(file)}}
+                    </a>
+                {% endfor %}
+            </div>
+        </div>
     {% endfor %}
 {% endblock %}
 

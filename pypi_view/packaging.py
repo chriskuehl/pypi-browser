@@ -3,9 +3,14 @@ import base64
 import contextlib
 import enum
 import os.path
+import re
 import typing
 import zipfile
 from dataclasses import dataclass
+
+
+def pep426_normalize(package_name: str) -> str:
+    return re.sub(r'[-_.]+', '-', package_name).lower()
 
 
 class UnsupportedPackageType(Exception):

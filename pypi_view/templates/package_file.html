@@ -1,42 +1,52 @@
 {% set page = 'package-file' %}
 {% set selected_package_name = package %}
-{% extends 'base.html' %}
+{% extends '_base.html' %}
+{% import '_macros.html' as macros %}
 
 {% block title %}{{filename}} | {{package}} | PyPi View{% endblock %}
 
 {% block content %}
-    <h1>{{filename}}</h1>
+    <h1><tt>{{filename}}</tt></h1>
+    <h5>{{macros.package_type_pill(filename)}}</h5>
 
     {% if metadata_path %}
-        <h2>Metadata</h2>
-        <table border="1">
+        <h4>Package Metadata</h4>
+        <table class="table table-bordered table-sm small metadata">
+            <caption>
+                Metadata parsed from
+                <a class="font-monospace" href="{{url_for('package_file_archive_path', package=package, filename=filename, archive_path=metadata_path)}}">
+                    {{metadata_path}}
+                </a>
+            </caption>
             {% for key, values in metadata.items()|sort %}
                 {% for value in values %}
                     <tr>
                         {% if loop.index == 1 %}
                             <th rowspan="{{values|length}}">{{key}}</th>
                         {% endif %}
-                        <td>{{value}}</td>
+                        <td class="font-monospace">{{value}}</td>
                     </tr>
                 {% endfor %}
             {% endfor %}
         </table>
-        <a href="{{url_for('package_file_archive_path', package=package, filename=filename, archive_path=metadata_path)}}">
-            View Raw Metadata
-        </a>
     {% endif %}
 
-    <h2>Files</h2>
-    <ul>
-        {% for entry in entries|sort(attribute="path") %}
-            <li>
+    <h4>Package Files</h4>
+    <div class="card bg-light mb-3">
+        <div class="list-group list-group-flush">
+            {% for entry in entries|sort(attribute="path") %}
                 <a
+                    class="list-group-item list-group-item-action small"
                     href="{{url_for('package_file_archive_path', package=package, filename=filename, archive_path=entry.path)}}"
-                >{{entry.path}}</a>
-                ({{entry.size}} bytes)
-            </li>
-        {% endfor %}
-    </ul>
+                >
+                    <span class="font-monospace">
+                        {{entry.path}}
+                    </span>
+                    {{entry.size|human_size}}
+                </a>
+            {% endfor %}
+        </div>
+    </div>
 {% endblock %}
 
 {# vim: ft=jinja

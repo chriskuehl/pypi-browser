@@ -32,6 +32,7 @@ async def files_for_package(package: str) -> typing.Dict[str, typing.Set[str]]:
     return {
         version: {file_['filename'] for file_ in files}
         for version, files in metadata['releases'].items()
+        if len(files) > 0
     }
 
 
