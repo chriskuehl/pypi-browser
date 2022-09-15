@@ -10,6 +10,7 @@ import fluffy_code.prebuilt_styles
 import packaging.version
 import pygments.lexers.special
 from identify import identify
+from markupsafe import Markup
 from starlette.applications import Starlette
 from starlette.middleware import Middleware
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -261,6 +262,11 @@ async def package_file_archive_path(request: Request) -> Response:
         )
     entry = matching_entries[0]
     mimetype, _ = mimetypes.guess_type(archive_path)
+    metadata = (
+        ('Size', _human_size(entry.size)),
+        ('Mimetype', Markup(f'<tt>{mimetype}</tt>') if mimetype else 'Unknown'),
+        ('Mode', Markup(f'<tt>{entry.mode}</tt>')),
+    )
 
     def _transfer_raw():
         """Return the file verbatim."""
@@ -329,6 +335,7 @@ async def package_file_archive_path(request: Request) -> Response:
                             highlight_diff=False,
                         ),
                     ),
+                    'metadata': metadata,
                     'extra_css': fluffy_code.code.get_global_css() + '\n' + style_config.css,
                     'extra_js': fluffy_code.code.get_global_javascript(),
                 },
@@ -336,25 +343,27 @@ async def package_file_archive_path(request: Request) -> Response:
         else:
             # Case 2: too long to syntax highlight.
             return templates.TemplateResponse(
-                'package_file_archive_path_cannot_render.html',
+                'package_file_archive_path.html',
                 {
                     'request': request,
                     'package': package_name,
                     'filename': file_name,
                     'archive_path': archive_path,
-                    'error': 'This file is too long to syntax highlight.',
+                    'metadata': metadata,
+                    'cannot_render_error': 'This file is too long to display inline with syntax highlighting.',
                 },
             )
 
     # Case 4: link to binary
     return templates.TemplateResponse(
-        'package_file_archive_path_cannot_render.html',
+        'package_file_archive_path.html',
         {
             'request': request,
             'package': package_name,
             'filename': file_name,
             'archive_path': archive_path,
-            'error': 'This file appears to be a binary.',
+            'metadata': metadata,
+            'cannot_render_error': 'This file appears to be a binary.',
         },
     )
 

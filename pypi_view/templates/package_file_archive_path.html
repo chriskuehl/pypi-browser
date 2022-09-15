@@ -17,12 +17,59 @@
 {% endblock %}
 
 {% block content %}
-    <h1>{{package}}: {{filename}}</h1>
-    <h2>{{archive_path}}</h2>
-    <div class="font-monospace">
-        {{rendered_text|safe}}
+    <h1 class="font-monospace">{{archive_path}}</h1>
+
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{url_for('home')}}">Browse</a></li>
+            <li class="breadcrumb-item">
+                <a
+                    href="{{url_for('package', package=package)}}"
+                >
+                    {{package}}
+                </a>
+            </li>
+            <li class="breadcrumb-item">
+                <a
+                    href="{{url_for('package_file', package=package, filename=filename)}}"
+                >
+                    {{filename}}
+                </a>
+            </li>
+            <li class="breadcrumb-item active" aria-current="page">{{archive_path}}</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <div class="col">
+            {% if cannot_render_error %}
+                <div class="card">
+                    <div class="card-body text-center">
+                        <h4>This file cannot be displayed.</h4>
+                        <p>{{cannot_render_error}}</p>
+                        <a href="?raw" class="btn btn-primary">View Raw File</a>
+                    </div>
+                </div>
+            {% else %}
+                <div class="font-monospace codeview">
+                    {{rendered_text|safe}}
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="col col-sm-3">
+            <h5>Metadata</h5>
+            <table class="table table-bordered table-sm small metadata">
+                {% for key, value in metadata %}
+                    <tr>
+                        <th>{{key}}</th>
+                        <td>{{value}}</td>
+                    </tr>
+                {% endfor %}
+            </table>
+            <a href="?raw" class="btn btn-primary btn-sm">View Raw File</a>
+        </div>
     </div>
-    <p><a href="?raw">View Raw</a></p>
 {% endblock %}
 
 {# vim: ft=jinja

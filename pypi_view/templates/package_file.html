@@ -6,7 +6,22 @@
 {% block title %}{{filename}} | {{package}} | PyPi View{% endblock %}
 
 {% block content %}
-    <h1><tt>{{filename}}</tt></h1>
+    <h1 class="font-monospace">{{filename}}</h1>
+
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{url_for('home')}}">Browse</a></li>
+            <li class="breadcrumb-item">
+                <a
+                    href="{{url_for('package', package=package)}}"
+                >
+                    {{package}}
+                </a>
+            </li>
+            <li class="breadcrumb-item active">{{filename}}</li>
+        </ol>
+    </nav>
+
     <h5>{{macros.package_type_pill(filename)}}</h5>
 
     {% if metadata_path %}

@@ -16,6 +16,7 @@ httpx = "^0.23.0"
 aiofiles = "^22.1.0"
 identify = "^2.5.5"
 Pygments = "^2.13.0"
+MarkupSafe = "^2.1.1"
 
 
 [tool.poetry.group.dev.dependencies]

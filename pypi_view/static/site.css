@@ -1,3 +1,11 @@
+.breadcrumb {
+    --bs-breadcrumb-divider: '>';
+}
+
 .page-package-file .metadata {
     width: auto;
+}
+
+.page-package-file-archive-path .codeview {
+    border: solid 1px #ddd;
 }

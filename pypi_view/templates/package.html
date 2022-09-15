@@ -5,7 +5,15 @@
 {% block title %}{{package}} | PyPi View{% endblock %}
 
 {% block content %}
-    <h1>{{package}}</h1>
+    <h1 class="font-monospace">{{package}}</h1>
+
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{url_for('home')}}">Browse</a></li>
+            <li class="breadcrumb-item active">{{package}}</li>
+        </ol>
+    </nav>
+
     <p>
     <tt>{{package}}</tt> has {{version_to_files|length}} version{{version_to_files|length|pluralize}} and {{total_files}} file{{total_files|pluralize}}.
         Select a file below to explore it.

@@ -4,6 +4,7 @@ import contextlib
 import enum
 import os.path
 import re
+import stat
 import typing
 import zipfile
 from dataclasses import dataclass
@@ -32,6 +33,7 @@ class PackageFormat(enum.Enum):
 @dataclass(frozen=True)
 class PackageEntry:
     path: str
+    mode: str
     size: int
 
 
@@ -41,6 +43,7 @@ def _package_entries_from_zipfile(path: str) -> typing.Set[PackageEntry]:
             PackageEntry(
                 path=entry.filename,
                 size=entry.file_size,
+                mode=stat.filemode(entry.external_attr >> 16),
             )
             for entry in zf.infolist()
         }
