@@ -1,4 +1,5 @@
 import email
+import importlib.metadata
 import io
 import itertools
 import mimetypes
@@ -103,6 +104,7 @@ def _human_size(size: int) -> str:
 
 templates.env.filters['human_size'] = _human_size
 templates.env.filters['pluralize'] = _pluralize
+templates.env.globals['pypi_browser_version'] = importlib.metadata.version('pypi-browser-webapp')
 
 
 @app.route('/')
