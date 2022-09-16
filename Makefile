@@ -7,4 +7,4 @@ test:
 
 .PHONY: start-dev
 start-dev:
-	PYPI_BROWSER_DEBUG=1 poetry run uvicorn --reload --port 5000 pypi_browser.app:app
+	PYPI_BROWSER_DEBUG=1 PYPI_BROWSER_PACKAGE_CACHE_PATH=$(CURDIR)/cache poetry run uvicorn --reload --port 5000 pypi_browser.app:app

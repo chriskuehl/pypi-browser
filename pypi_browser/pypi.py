@@ -4,6 +4,7 @@ import dataclasses
 import itertools
 import os.path
 import typing
+import urllib.parse
 
 import aiofiles.os
 import httpx
@@ -83,7 +84,7 @@ async def downloaded_file_path(config: PyPIConfig, package: str, filename: str) 
         # matching file.
         for file_ in itertools.chain.from_iterable(metadata['releases'].values()):
             if file_['filename'] == filename:
-                url = file_['url']
+                url = urllib.parse.urljoin(config.pypi_url, file_['url'])
                 break
         else:
             raise CannotFindFileError(package, filename)
