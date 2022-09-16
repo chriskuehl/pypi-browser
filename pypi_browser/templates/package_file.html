@@ -24,6 +24,8 @@
 
     <h5>{{macros.package_type_pill(filename)}}</h5>
 
+    {{macros.tarball_warning(package_is_tarball)}}
+
     {% if metadata_path %}
         <h4>Package Metadata</h4>
         <table class="table table-bordered table-sm small metadata">

@@ -1,6 +1,7 @@
 {% set page = 'package-file-archive-path' %}
 {% set selected_package_name = package %}
 {% extends '_base.html' %}
+{% import '_macros.html' as macros %}
 
 {% block title %}{{archive_path}} | {{filename}} | {{package}} | PyPI Browser{% endblock %}
 
@@ -39,6 +40,8 @@
             <li class="breadcrumb-item active" aria-current="page">{{archive_path}}</li>
         </ol>
     </nav>
+
+    {{macros.tarball_warning(package_is_tarball)}}
 
     <div class="row mb-6">
         <div class="col col-sm-9">

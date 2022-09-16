@@ -26,6 +26,7 @@ from starlette.templating import Jinja2Templates
 
 import pypi_browser.packaging
 from pypi_browser import pypi
+from pypi_browser.packaging import PackageFormat
 
 
 PACKAGE_TYPE_NOT_SUPPORTED_ERROR = (
@@ -207,6 +208,7 @@ async def package_file(request: Request) -> Response:
         {
             'request': request,
             'package': package_name,
+            'package_is_tarball': package.package_format is PackageFormat.TARBALL,
             'filename': file_name,
             'entries': entries,
             'metadata_path': metadata_path,
@@ -319,6 +321,7 @@ async def package_file_archive_path(request: Request) -> Response:
                 {
                     'request': request,
                     'package': package_name,
+                    'package_is_tarball': package.package_format is PackageFormat.TARBALL,
                     'filename': file_name,
                     'archive_path': archive_path,
                     'rendered_text': fluffy_code.code.render(
@@ -341,6 +344,7 @@ async def package_file_archive_path(request: Request) -> Response:
                 {
                     'request': request,
                     'package': package_name,
+                    'package_is_tarball': package.package_format is PackageFormat.TARBALL,
                     'filename': file_name,
                     'archive_path': archive_path,
                     'metadata': metadata,
@@ -354,6 +358,7 @@ async def package_file_archive_path(request: Request) -> Response:
         {
             'request': request,
             'package': package_name,
+            'package_is_tarball': package.package_format is PackageFormat.TARBALL,
             'filename': file_name,
             'archive_path': archive_path,
             'metadata': metadata,

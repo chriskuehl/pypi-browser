@@ -5,6 +5,7 @@ import enum
 import os.path
 import re
 import stat
+import tarfile
 import typing
 import zipfile
 from dataclasses import dataclass
@@ -27,8 +28,6 @@ class PackageType(enum.Enum):
 class PackageFormat(enum.Enum):
     ZIPFILE = enum.auto()
     TARBALL = enum.auto()
-    TARBALL_GZ = enum.auto()
-    TARBALL_BZ2 = enum.auto()
 
 
 @dataclass(frozen=True)
@@ -48,6 +47,19 @@ def _package_entries_from_zipfile(path: str) -> typing.Set[PackageEntry]:
             )
             for entry in zf.infolist()
             if not entry.is_dir()
+        }
+
+
+def _package_entries_from_tarball(path: str) -> typing.Set[PackageEntry]:
+    with tarfile.open(path) as tf:
+        return {
+            PackageEntry(
+                path=entry.name,
+                size=entry.size,
+                mode=stat.filemode(entry.mode),
+            )
+            for entry in tf.getmembers()
+            if not entry.isdir()
         }
 
 
@@ -90,8 +102,10 @@ class Package:
         elif name.endswith('.egg'):
             package_type = PackageType.EGG
             package_format = PackageFormat.ZIPFILE
+        elif name.endswith(('.tar', '.tar.gz', '.tgz', '.tar.bz2')):
+            package_type = PackageType.SDIST
+            package_format = PackageFormat.TARBALL
         else:
-            # TODO: Add support for tarballs
             raise UnsupportedPackageType(name)
 
         return cls(
@@ -103,6 +117,8 @@ class Package:
     async def entries(self) -> typing.Set[PackageEntry]:
         if self.package_format is PackageFormat.ZIPFILE:
             return await asyncio.to_thread(_package_entries_from_zipfile, self.path)
+        elif self.package_format is PackageFormat.TARBALL:
+            return await asyncio.to_thread(_package_entries_from_tarball, self.path)
         else:
             raise AssertionError(self.package_format)
 
@@ -116,5 +132,13 @@ class Package:
                     yield zip_archive_file
             finally:
                 await asyncio.to_thread(zf.close)
+        elif self.package_format is PackageFormat.TARBALL:
+            tf = await asyncio.to_thread(tarfile.open, self.path)
+            archive_file = await asyncio.to_thread(tf.extractfile, path)
+            try:
+                async with AsyncArchiveFile(archive_file) as zip_archive_file:
+                    yield zip_archive_file
+            finally:
+                await asyncio.to_thread(tf.close)
         else:
             raise AssertionError(self.package_format)

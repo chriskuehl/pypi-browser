@@ -8,5 +8,15 @@
     {% endif %}
 {% endmacro %}
 
+{% macro tarball_warning(is_tarball) %}
+    {% if is_tarball %}
+        <div class="alert alert-warning" role="alert">
+            You're browsing the contents of a tarball which may be slow as
+            tarballs do not support random access. Browse a <tt>.whl</tt> or
+            <tt>.zip</tt> file for best performance.
+        </div>
+    {% endif %}
+{% endmacro %}
+
 {# vim: ft=jinja
 #}

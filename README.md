@@ -33,9 +33,6 @@ You can see all uploaded package archives for a given package.
 
 You can inspect a package archive's metadata and its contents.
 
-Note that this is currently only supported for `.zip` and `.whl` files, but
-support for tarballs is planned.
-
 
 ### Easily view files from package archives
 
@@ -80,12 +77,3 @@ $ make start-dev
 ```
 
 to run a copy of the application locally with hot reloading enabled.
-
-
-## Roadmap
-
-* Add support for non-ZIP files (e.g. `.tar.gz` source distributions).
-
-  This shouldn't be too hard, but it may be slow at runtime since unlike zip,
-  tarballs don't contain an index or support extracting individual files
-  without reading the entire tarball.
