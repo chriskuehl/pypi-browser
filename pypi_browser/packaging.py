@@ -21,6 +21,7 @@ class UnsupportedPackageType(Exception):
 class PackageType(enum.Enum):
     SDIST = enum.auto()
     WHEEL = enum.auto()
+    EGG = enum.auto()
 
 
 class PackageFormat(enum.Enum):
@@ -85,6 +86,9 @@ class Package:
             package_format = PackageFormat.ZIPFILE
         elif name.endswith('.zip'):
             package_type = PackageType.SDIST
+            package_format = PackageFormat.ZIPFILE
+        elif name.endswith('.egg'):
+            package_type = PackageType.EGG
             package_format = PackageFormat.ZIPFILE
         else:
             # TODO: Add support for tarballs
