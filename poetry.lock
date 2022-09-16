@@ -275,7 +275,7 @@ setuptools = "*"
 name = "packaging"
 version = "21.3"
 description = "Core utilities for Python packages"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.6"
 
@@ -356,7 +356,7 @@ pygments = "!=2.7.3"
 name = "pyparsing"
 version = "3.0.9"
 description = "pyparsing module - Classes and methods to define and execute parsing grammars"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.6.8"
 
@@ -520,7 +520,7 @@ testing = ["coverage (>=6.2)", "coverage-enable-subprocess (>=1)", "flaky (>=3.7
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "b3c4e675417e9da8650aa187966b18147debeee234d5e06504404d50e2b57ce3"
+content-hash = "4185ae4716987d806b84367d403afc25427e6ce8f4605607703d64a3abd7eae5"
 
 [metadata.files]
 aiofiles = [

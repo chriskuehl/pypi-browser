@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pypi-browser-webapp"
-version = "0.0.0"
+version = "0.0.1"
 description = "PyPI package browsing web application"
 authors = ["Chris Kuehl <ckuehl@ckuehl.me>"]
 license = "Apache-2.0"
@@ -17,6 +17,7 @@ aiofiles = "^22.1.0"
 identify = "^2.5.5"
 Pygments = "^2.13.0"
 MarkupSafe = "^2.1.1"
+packaging = "^21.3"
 
 
 [tool.poetry.group.dev.dependencies]
