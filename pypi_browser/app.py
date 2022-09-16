@@ -9,6 +9,7 @@ import fluffy_code.code
 import fluffy_code.prebuilt_styles
 import packaging.version
 import pygments.lexers.special
+import starlette.config
 from identify import identify
 from markupsafe import Markup
 from starlette.applications import Starlette
@@ -24,6 +25,7 @@ from starlette.templating import Jinja2Templates
 
 import pypi_browser.packaging
 from pypi_browser import pypi
+
 
 PACKAGE_TYPE_NOT_SUPPORTED_ERROR = (
     'Sorry, this package type is not yet supported (only .zip and .whl supported currently).'
@@ -64,6 +66,12 @@ class CacheControlHeaderMiddleware(BaseHTTPMiddleware):
         response.headers['Cache-Control'] = 'no-cache'
         return response
 
+
+config = starlette.config.Config()
+pypi_config = pypi.PyPIConfig(
+    cache_path=config('PYPI_BROWSER_PACKAGE_CACHE_PATH', default='/tmp'),
+    pypi_url=config('PYPI_BROWSER_PYPI_URL', default='https://pypi.org'),
+)
 
 app = Starlette(
     debug=os.environ.get('PYPI_BROWSER_DEBUG') == '1',
@@ -110,7 +118,7 @@ async def package(request: Request) -> Response:
         return RedirectResponse(request.url_for('package', package=normalized_package_name))
 
     try:
-        version_to_files = await pypi.files_for_package(package_name)
+        version_to_files = await pypi.files_for_package(pypi_config, package_name)
     except pypi.PackageDoesNotExist:
         return PlainTextResponse(
             f'Package {package_name!r} does not exist on PyPI.',
@@ -149,7 +157,7 @@ async def package_file(request: Request) -> Response:
         )
 
     try:
-        archive = await pypi.downloaded_file_path(package_name, file_name)
+        archive = await pypi.downloaded_file_path(pypi_config, package_name, file_name)
     except pypi.PackageDoesNotExist:
         return PlainTextResponse(
             f'Package {package_name!r} does not exist on PyPI.',
@@ -223,7 +231,7 @@ async def package_file_archive_path(request: Request) -> Response:
         )
 
     try:
-        archive = await pypi.downloaded_file_path(package_name, file_name)
+        archive = await pypi.downloaded_file_path(pypi_config, package_name, file_name)
     except pypi.PackageDoesNotExist:
         return PlainTextResponse(
             f'Package {package_name!r} does not exist on PyPI.',
