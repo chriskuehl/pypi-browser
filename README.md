@@ -6,10 +6,10 @@ PyPI Browser
 
 You can view a live version which provides information about packages from pypi.org:
 
-* [Search page](https://pypi-browser.ckuehl.me/)
-* [Package page for the `django` package](https://pypi-browser.ckuehl.me/package/django)
-* [Archive browse page for the `Django-4.1.1-py3-none-any.whl` file](https://pypi-browser.ckuehl.me/package/django/Django-4.1.1-py3-none-any.whl)
-* [File viewing page for a random file from the same archive](https://pypi-browser.ckuehl.me/package/django/Django-4.1.1-py3-none-any.whl/django/forms/boundfield.py)
+* [Search page](https://pypi-browser.org/)
+* [Package page for the `django` package](https://pypi-browser.org/package/django)
+* [Archive browse page for the `Django-4.1.1-py3-none-any.whl` file](https://pypi-browser.org/package/django/Django-4.1.1-py3-none-any.whl)
+* [File viewing page for a random file from the same archive](https://pypi-browser.org/package/django/Django-4.1.1-py3-none-any.whl/django/forms/boundfield.py)
 
 It can also be deployed with a private PyPI registry as its target in order to
 be used for a company's internal registry.
