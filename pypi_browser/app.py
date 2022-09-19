@@ -29,9 +29,7 @@ from pypi_browser import pypi
 from pypi_browser.packaging import PackageFormat
 
 
-PACKAGE_TYPE_NOT_SUPPORTED_ERROR = (
-    'Sorry, this package type is not yet supported (only .zip, .whl, and .egg supported currently).'
-)
+PACKAGE_TYPE_NOT_SUPPORTED_ERROR = 'Sorry, this package type is not yet supported.'
 
 ONE_KB = 2**10
 ONE_MB = 2**20
