@@ -4,16 +4,16 @@
 {% block title %}PyPI Browser{% endblock %}
 
 {% block content %}
-    <div class="px-4 py-4 my-4 mx-5">
+    <div class="px-4 py-4 my-4 mx-sm-5">
         <div class="card">
-            <div class="card-body text-center py-5 px-5">
+            <div class="card-body text-center py-5 px-sm-5 px-xs-2">
                 <h4 class="mb-4">Enter a Python project name to browse its files:</h4>
                 <form method="GET" action="{{url_for('search')}}">
                     <div class="row px-5 mb-4">
-                        <div class="col">
+                        <div class="col-sm mb-2">
                             <input type="text" name="package" class="form-control form-control-lg" />
                         </div>
-                        <div class="col-auto">
+                        <div class="col-sm-auto">
                             <button type="submit" class="btn btn-lg btn-primary">Browse Package</button>
                         </div>
                     </div>
