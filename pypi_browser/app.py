@@ -5,6 +5,7 @@ import itertools
 import mimetypes
 import os.path
 import re
+import typing
 
 import fluffy_code.code
 import fluffy_code.prebuilt_styles
@@ -60,7 +61,11 @@ install_root = os.path.dirname(__file__)
 
 class CacheControlHeaderMiddleware(BaseHTTPMiddleware):
 
-    async def dispatch(self, request, call_next):
+    async def dispatch(
+        self,
+        request: Request,
+        call_next: typing.Callable[[Request], typing.Awaitable[Response]],
+    ) -> Response:
         response = await call_next(request)
         # TODO: There should be a better way to do this...
         response.headers['Cache-Control'] = 'no-cache'
@@ -267,9 +272,9 @@ async def package_file_archive_path(request: Request) -> Response:
         ('Mode', Markup(f'<tt>{entry.mode}</tt>')),
     )
 
-    def _transfer_raw():
+    def _transfer_raw() -> Response:
         """Return the file verbatim."""
-        async def transfer_file():
+        async def transfer_file() -> typing.AsyncIterator[bytes]:
             async with package.open_from_archive(archive_path) as f:
                 data = None
                 while data is None or len(data) > 0:
@@ -306,10 +311,15 @@ async def package_file_archive_path(request: Request) -> Response:
             style_config = fluffy_code.prebuilt_styles.default_style()
 
             try:
-                lexer = pygments.lexers.guess_lexer_for_filename(
-                    archive_path,
-                    text,
-                    stripnl=False,
+                # TODO: Remove this cast once
+                # https://github.com/python/typeshed/pull/8777 is merged.
+                lexer = typing.cast(
+                    pygments.lexer.Lexer,
+                    pygments.lexers.guess_lexer_for_filename(
+                        archive_path,
+                        text,
+                        stripnl=False,
+                    ),
                 )
             except pygments.lexers.ClassNotFound:
                 lexer = pygments.lexers.special.TextLexer(stripnl=False)

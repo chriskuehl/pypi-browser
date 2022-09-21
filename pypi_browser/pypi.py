@@ -20,7 +20,11 @@ class PackageDoesNotExist(Exception):
     pass
 
 
-async def package_metadata(config: PyPIConfig, client: httpx.AsyncClient, package: str) -> typing.Dict:
+async def package_metadata(
+    config: PyPIConfig,
+    client: httpx.AsyncClient,
+    package: str,
+) -> typing.Dict[typing.Any, typing.Any]:
     resp = await client.get(f'{config.pypi_url}/pypi/{package}/json')
     if resp.status_code == 404:
         raise PackageDoesNotExist(package)
@@ -54,16 +58,17 @@ def _storage_path(config: PyPIConfig, package: str, filename: str) -> str:
 
 
 @contextlib.asynccontextmanager
-async def _atomic_file(path: str, mode: str = 'w') -> typing.Any:
-    async with aiofiles.tempfile.NamedTemporaryFile(mode, dir=os.path.dirname(path), delete=False) as f:
+async def _atomic_file(path: str) -> typing.AsyncIterator[aiofiles.threadpool.binary.AsyncBufferedIOBase]:
+    async with aiofiles.tempfile.NamedTemporaryFile('wb', dir=os.path.dirname(path), delete=False) as f:
+        tmp_path = typing.cast(str, f.name)
         try:
             yield f
         except BaseException:
-            await aiofiles.os.remove(f.name)
+            await aiofiles.os.remove(tmp_path)
             raise
         else:
             # This is atomic since the temporary file was created in the same directory.
-            await aiofiles.os.rename(f.name, path)
+            await aiofiles.os.rename(tmp_path, path)
 
 
 async def downloaded_file_path(config: PyPIConfig, package: str, filename: str) -> str:
@@ -91,7 +96,7 @@ async def downloaded_file_path(config: PyPIConfig, package: str, filename: str) 
 
         await aiofiles.os.makedirs(os.path.dirname(stored_path), exist_ok=True)
 
-        async with _atomic_file(stored_path, 'wb') as f:
+        async with _atomic_file(stored_path) as f:
             async with client.stream('GET', url) as resp:
                 resp.raise_for_status()
                 async for chunk in resp.aiter_bytes():
