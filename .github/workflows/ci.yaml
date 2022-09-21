@@ -1,0 +1,20 @@
+name: CI
+on: push
+jobs:
+  build-and-test:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.10'
+      - name: Install dependencies
+        run: |
+          pip install poetry
+          poetry install
+      - name: Run tests
+        run: |
+          poetry run coverage run -m pytest tests
+          poetry run coverage report
+      - name: Run type checking
+        run: poetry run mypy pypi_browser
