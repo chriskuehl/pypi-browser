@@ -9,6 +9,7 @@ import tarfile
 import typing
 import zipfile
 from dataclasses import dataclass
+from types import TracebackType
 
 
 def pep426_normalize(package_name: str) -> str:
@@ -63,23 +64,25 @@ def _package_entries_from_tarball(path: str) -> typing.Set[PackageEntry]:
         }
 
 
-ArchiveFile = typing.Union[zipfile.ZipExtFile]
-
-
 class AsyncArchiveFile:
 
-    file_: ArchiveFile
+    file_: typing.IO[bytes]
 
-    def __init__(self, file_: ArchiveFile) -> None:
+    def __init__(self, file_: typing.IO[bytes]) -> None:
         self.file_ = file_
 
     async def __aenter__(self) -> 'AsyncArchiveFile':
         return self
 
-    async def __aexit__(self, exc_t, exc_v, exc_tb) -> None:
+    async def __aexit__(
+        self,
+        exc_t: typing.Optional[typing.Type[BaseException]],
+        exc_v: typing.Optional[BaseException],
+        exc_tb: typing.Optional[TracebackType],
+    ) -> None:
         await asyncio.to_thread(self.file_.close)
 
-    async def read(self, n_bytes: typing.Optional[int] = None) -> bytes:
+    async def read(self, n_bytes: int = -1) -> bytes:
         return await asyncio.to_thread(self.file_.read, n_bytes)
 
 
@@ -123,21 +126,22 @@ class Package:
             raise AssertionError(self.package_format)
 
     @contextlib.asynccontextmanager
-    async def open_from_archive(self, path: str) -> str:
+    async def open_from_archive(self, path: str) -> typing.AsyncIterator[AsyncArchiveFile]:
         if self.package_format is PackageFormat.ZIPFILE:
             zf = await asyncio.to_thread(zipfile.ZipFile, self.path)
-            archive_file = await asyncio.to_thread(zf.open, path)
             try:
-                async with AsyncArchiveFile(archive_file) as zip_archive_file:
-                    yield zip_archive_file
+                zip_archive_file = await asyncio.to_thread(zf.open, path)
+                async with AsyncArchiveFile(zip_archive_file) as wrapped:
+                    yield wrapped
             finally:
                 await asyncio.to_thread(zf.close)
         elif self.package_format is PackageFormat.TARBALL:
             tf = await asyncio.to_thread(tarfile.open, self.path)
-            archive_file = await asyncio.to_thread(tf.extractfile, path)
             try:
-                async with AsyncArchiveFile(archive_file) as zip_archive_file:
-                    yield zip_archive_file
+                tar_archive_file = await asyncio.to_thread(tf.extractfile, path)
+                assert tar_archive_file is not None, path
+                async with AsyncArchiveFile(tar_archive_file) as wrapped:
+                    yield wrapped
             finally:
                 await asyncio.to_thread(tf.close)
         else:
