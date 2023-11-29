@@ -36,7 +36,7 @@ ONE_KB = 2**10
 ONE_MB = 2**20
 ONE_GB = 2**30
 
-TEXT_RENDER_FILESIZE_LIMIT = 50 * ONE_KB
+TEXT_RENDER_FILESIZE_LIMIT = int(os.environ.get('PYPI_BROWSER_TEXT_RENDER_FILESIZE_LIMIT', ONE_MB))
 
 # Mime types which are allowed to be presented as detected.
 # TODO: I think we actually only need to prevent text/html (and any HTML
