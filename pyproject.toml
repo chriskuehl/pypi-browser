@@ -8,7 +8,7 @@ readme = "README.md"
 packages = [{include = "pypi_browser"}]
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = "^3.10"
 starlette = "*"
 fluffy-code = "^0.0.2"
 Jinja2 = "^3.1.2"
