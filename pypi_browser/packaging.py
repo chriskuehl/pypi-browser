@@ -13,7 +13,7 @@ from types import TracebackType
 
 
 def pep426_normalize(package_name: str) -> str:
-    return re.sub(r'[-_.]+', '-', package_name).lower()
+    return re.sub(r'[-_.]+', '-', package_name.strip()).lower()
 
 
 class UnsupportedPackageType(Exception):
