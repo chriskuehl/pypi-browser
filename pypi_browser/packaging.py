@@ -128,7 +128,7 @@ class Package:
     @contextlib.asynccontextmanager
     async def open_from_archive(self, path: str) -> typing.AsyncIterator[AsyncArchiveFile]:
         if self.package_format is PackageFormat.ZIPFILE:
-            zf = await asyncio.to_thread(zipfile.ZipFile, self.path)  # type: ignore
+            zf = await asyncio.to_thread(zipfile.ZipFile, self.path)
             try:
                 zip_archive_file = await asyncio.to_thread(zf.open, path)
                 async with AsyncArchiveFile(zip_archive_file) as wrapped:

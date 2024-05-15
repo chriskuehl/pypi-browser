@@ -22,6 +22,7 @@ from starlette.responses import PlainTextResponse
 from starlette.responses import RedirectResponse
 from starlette.responses import Response
 from starlette.responses import StreamingResponse
+from starlette.routing import Route
 from starlette.staticfiles import StaticFiles
 from starlette.templating import Jinja2Templates
 
@@ -78,14 +79,6 @@ pypi_config = pypi.PyPIConfig(
     pypi_url=config('PYPI_BROWSER_PYPI_URL', default='https://pypi.org'),
 )
 
-app = Starlette(
-    debug=os.environ.get('PYPI_BROWSER_DEBUG') == '1',
-    middleware=[
-        Middleware(CacheControlHeaderMiddleware),
-    ],
-)
-app.mount('/static', StaticFiles(directory=os.path.join(install_root, 'static')), name='static')
-
 templates = Jinja2Templates(
     directory=os.path.join(install_root, 'templates'),
 )
@@ -111,12 +104,10 @@ templates.env.filters['pluralize'] = _pluralize
 templates.env.globals['pypi_browser_version'] = importlib.metadata.version('pypi-browser-webapp')
 
 
-@app.route('/')
 async def home(request: Request) -> Response:
     return templates.TemplateResponse('home.html', {'request': request})
 
 
-@app.route('/package/{package}')
 async def package(request: Request) -> Response:
     package_name = request.path_params['package']
     normalized_package_name = pypi_browser.packaging.pep426_normalize(package_name)
@@ -147,7 +138,6 @@ async def package(request: Request) -> Response:
         )
 
 
-@app.route('/package/{package}/{filename}')
 async def package_file(request: Request) -> Response:
     package_name = request.path_params['package']
     file_name = request.path_params['filename']
@@ -220,7 +210,6 @@ async def package_file(request: Request) -> Response:
     )
 
 
-@app.route('/package/{package}/{filename}/{archive_path:path}')
 async def package_file_archive_path(request: Request) -> Response:
     package_name = request.path_params['package']
     file_name = request.path_params['filename']
@@ -375,6 +364,21 @@ async def package_file_archive_path(request: Request) -> Response:
     )
 
 
-@app.route('/search')
 async def search(request: Request) -> Response:
     return RedirectResponse(request.url_for('package', package=request.query_params['package']))
+
+
+app = Starlette(
+    debug=os.environ.get('PYPI_BROWSER_DEBUG') == '1',
+    middleware=[
+        Middleware(CacheControlHeaderMiddleware),
+    ],
+    routes=[
+        Route('/', endpoint=home),
+        Route('/package/{package}', endpoint=package),
+        Route('/package/{package}/{filename}', endpoint=package_file),
+        Route('/package/{package}/{filename}/{archive_path:path}', endpoint=package_file_archive_path),
+        Route('/search', endpoint=search),
+    ],
+)
+app.mount('/static', StaticFiles(directory=os.path.join(install_root, 'static')), name='static')
