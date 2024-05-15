@@ -74,9 +74,16 @@ class CacheControlHeaderMiddleware(BaseHTTPMiddleware):
 
 
 config = starlette.config.Config()
+pypi_url = config('PYPI_BROWSER_PYPI_URL', default='https://pypi.org').rstrip('/')
+repo: pypi.PythonRepository
+if pypi_url.endswith('/simple'):
+    repo = pypi.SimpleRepository(pypi_url)
+else:
+    repo = pypi.LegacyJsonRepository(pypi_url)
+
 pypi_config = pypi.PyPIConfig(
+    repo=repo,
     cache_path=config('PYPI_BROWSER_PACKAGE_CACHE_PATH', default='/tmp'),
-    pypi_url=config('PYPI_BROWSER_PYPI_URL', default='https://pypi.org'),
 )
 
 templates = Jinja2Templates(
@@ -115,16 +122,25 @@ async def package(request: Request) -> Response:
         return RedirectResponse(request.url_for('package', package=normalized_package_name))
 
     try:
-        version_to_files = await pypi.files_for_package(pypi_config, package_name)
+        version_to_files = await pypi.files_by_version(pypi_config, package_name)
     except pypi.PackageDoesNotExist:
         return PlainTextResponse(
             f'Package {package_name!r} does not exist on PyPI.',
             status_code=404,
         )
     else:
+        def _version_sort_key(version: str | None) -> packaging.version.Version:
+            if version is not None:
+                try:
+                    return packaging.version.parse(version)
+                except packaging.version.InvalidVersion:
+                    pass
+            # Not really correct, but just throw everything we can't parse at the bottom.
+            return packaging.version.Version('0.0.0')
+
         version_to_files_sorted = sorted(
             version_to_files.items(),
-            key=lambda item: packaging.version.parse(item[0]),
+            key=lambda item: _version_sort_key(item[0]),
             reverse=True,
         )
         return templates.TemplateResponse(
