@@ -74,7 +74,7 @@ class CacheControlHeaderMiddleware(BaseHTTPMiddleware):
 
 
 config = starlette.config.Config()
-pypi_url = config('PYPI_BROWSER_PYPI_URL', default='https://pypi.org').rstrip('/')
+pypi_url = config('PYPI_BROWSER_PYPI_URL', default='https://pypi.org/simple').rstrip('/')
 repo: pypi.PythonRepository
 if pypi_url.endswith('/simple'):
     repo = pypi.SimpleRepository(pypi_url)
