@@ -1,6 +1,9 @@
+import abc
 import base64
+import collections
 import contextlib
 import dataclasses
+import html.parser
 import itertools
 import os.path
 import typing
@@ -9,38 +12,98 @@ import urllib.parse
 import aiofiles.os
 import httpx
 
+from pypi_browser import packaging
+
+
+class PythonRepository(abc.ABC):
+
+    @abc.abstractmethod
+    async def files_for_package(self, package_name: str) -> dict[str, str]:
+        """Return mapping from filename to file URL for files in a package."""
+
+
+class HTMLAnchorParser(html.parser.HTMLParser):
+    anchors: set[str]
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.anchors = set()
+
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        if tag == 'a':
+            if href := dict(attrs).get('href'):
+                self.anchors.add(href)
+
+
+@dataclasses.dataclass(frozen=True)
+class SimpleRepository(PythonRepository):
+    """Old-style "simple" PyPI registry serving HTML files."""
+    # TODO: Also handle PEP691 JSON simple repositories.
+    pypi_url: str
+
+    async def files_for_package(self, package_name: str) -> dict[str, str]:
+        async with httpx.AsyncClient() as client:
+            resp = await client.get(
+                f'{self.pypi_url}/{package_name}',
+                follow_redirects=True,
+            )
+            if resp.status_code == 404:
+                raise PackageDoesNotExist(package_name)
+            parser = HTMLAnchorParser()
+            parser.feed(resp.text)
+
+            def clean_url(url: str) -> str:
+                parsed = urllib.parse.urlparse(urllib.parse.urljoin(str(resp.url), url))
+                return parsed._replace(fragment='').geturl()
+
+            return {
+                (urllib.parse.urlparse(url).path).split('/')[-1]: clean_url(url)
+                for url in parser.anchors
+            }
+
+
+@dataclasses.dataclass(frozen=True)
+class LegacyJsonRepository(PythonRepository):
+    """Non-standardized JSON API compatible with pypi.org's /pypi/*/json endpoints."""
+    pypi_url: str
+
+    async def files_for_package(self, package_name: str) -> dict[str, str]:
+        async with httpx.AsyncClient() as client:
+            resp = await client.get(
+                f'{self.pypi_url}/pypi/{package_name}/json',
+                follow_redirects=True,
+            )
+            if resp.status_code == 404:
+                raise PackageDoesNotExist(package_name)
+            resp.raise_for_status()
+            return {
+                file_['filename']: urllib.parse.urljoin(str(resp.url), file_['url'])
+                for file_ in itertools.chain.from_iterable(resp.json()['releases'].values())
+            }
+
 
 @dataclasses.dataclass(frozen=True)
 class PyPIConfig:
+    repo: PythonRepository
     cache_path: str
-    pypi_url: str
 
 
 class PackageDoesNotExist(Exception):
     pass
 
 
-async def package_metadata(
-    config: PyPIConfig,
-    client: httpx.AsyncClient,
-    package: str,
-) -> typing.Dict[typing.Any, typing.Any]:
-    resp = await client.get(f'{config.pypi_url}/pypi/{package}/json')
-    if resp.status_code == 404:
-        raise PackageDoesNotExist(package)
-    resp.raise_for_status()
-    return resp.json()
-
-
-async def files_for_package(config: PyPIConfig, package: str) -> typing.Dict[str, typing.Set[str]]:
-    async with httpx.AsyncClient() as client:
-        metadata = await package_metadata(config, client, package)
-
-    return {
-        version: {file_['filename'] for file_ in files}
-        for version, files in metadata['releases'].items()
-        if len(files) > 0
-    }
+async def files_by_version(config: PyPIConfig, package: str) -> dict[str | None, set[str]]:
+    ret = collections.defaultdict(set)
+    for filename in await config.repo.files_for_package(package):
+        try:
+            version = packaging.guess_version_from_filename(filename)
+        except ValueError:
+            # Possible with some very poorly-formed packages that used to be
+            # allowed on PyPI. Just skip them when this happens.
+            pass
+        else:
+            ret[version].add(filename)
+    return ret
 
 
 class CannotFindFileError(Exception):
@@ -81,21 +144,15 @@ async def downloaded_file_path(config: PyPIConfig, package: str, filename: str) 
     if await aiofiles.os.path.exists(stored_path):
         return stored_path
 
+    filename_to_url = await config.repo.files_for_package(package)
+    try:
+        url = filename_to_url[filename]
+    except KeyError:
+        raise CannotFindFileError(package, filename)
+
+    await aiofiles.os.makedirs(os.path.dirname(stored_path), exist_ok=True)
+
     async with httpx.AsyncClient() as client:
-        metadata = await package_metadata(config, client, package)
-
-        # Parsing versions from non-wheel Python packages isn't perfectly
-        # reliable, so just search through all releases until we find a
-        # matching file.
-        for file_ in itertools.chain.from_iterable(metadata['releases'].values()):
-            if file_['filename'] == filename:
-                url = urllib.parse.urljoin(config.pypi_url, file_['url'])
-                break
-        else:
-            raise CannotFindFileError(package, filename)
-
-        await aiofiles.os.makedirs(os.path.dirname(stored_path), exist_ok=True)
-
         async with _atomic_file(stored_path) as f:
             async with client.stream('GET', url) as resp:
                 resp.raise_for_status()

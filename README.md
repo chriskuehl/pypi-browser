@@ -56,6 +56,17 @@ You can set these environment variables to configure the server:
 
 * `PYPI_BROWSER_PYPI_URL`: URL for the PyPI server to use (defaults to
   `https://pypi.org`)
+
+  If your registry supports the pypi.org-compatible JSON API (e.g.
+  `{registry}/pypi/{package}/json`), specify your base registry URL without
+  appending `/simple` (e.g. `https://my-registry`).
+
+  If your registry only supports the traditional HTML "simple" index, specify
+  the registry URL with `/simple` at the end (e.g.
+  `https://my-registry/simple`).
+
+  Note that the [PEP691][pep691] JSON-based "simple" API is not yet supported.
+
 * `PYPI_BROWSER_PACKAGE_CACHE_PATH`: Filesystem path to use for caching
   downloaded files. This will grow forever (the app does not clean it up) so
   you may want to use `tmpreaper` or similar to manage its size.
@@ -77,3 +88,5 @@ $ make start-dev
 ```
 
 to run a copy of the application locally with hot reloading enabled.
+
+[pep691]: https://peps.python.org/pep-0691/
