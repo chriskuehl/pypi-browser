@@ -21,7 +21,15 @@
     </p>
     {% for version, files in version_to_files %}
         <div class="card bg-light mb-3">
-            <div class="card-header"><h5 class="mb-0">{{version}}</h5></div>
+            <div class="card-header">
+                <h5 class="mb-0">
+                    {% if version is not none %}
+                        {{version}}
+                    {% else %}
+                        (unparseable version)
+                    {% endif %}
+                </h5>
+            </div>
             <div class="list-group list-group-flush">
                 {% for file in files|sort %}
                     <a class="list-group-item list-group-item-action" href="{{url_for('package_file', package=package, filename=file)}}">
