@@ -37,8 +37,7 @@ class HTMLAnchorParser(html.parser.HTMLParser):
 
 @dataclasses.dataclass(frozen=True)
 class SimpleRepository(PythonRepository):
-    """Old-style "simple" PyPI registry serving HTML files."""
-    # TODO: Also handle PEP691 JSON simple repositories.
+    """"Simple" PyPI registry serving either JSON or HTML files."""
     pypi_url: str
 
     async def files_for_package(self, package_name: str) -> dict[str, str]:
@@ -46,20 +45,32 @@ class SimpleRepository(PythonRepository):
             resp = await client.get(
                 f'{self.pypi_url}/{package_name}',
                 follow_redirects=True,
+                headers={
+                    'Accept': ', '.join((
+                        'application/vnd.pypi.simple.v1+json',
+                        'application/vnd.pypi.simple.v1+html;q=0.2',
+                        'text/html;q=0.01',
+                    )),
+                },
             )
             if resp.status_code == 404:
                 raise PackageDoesNotExist(package_name)
-            parser = HTMLAnchorParser()
-            parser.feed(resp.text)
 
             def clean_url(url: str) -> str:
                 parsed = urllib.parse.urlparse(urllib.parse.urljoin(str(resp.url), url))
                 return parsed._replace(fragment='').geturl()
 
-            return {
-                (urllib.parse.urlparse(url).path).split('/')[-1]: clean_url(url)
-                for url in parser.anchors
-            }
+            if resp.headers.get('Content-Type') == 'application/vnd.pypi.simple.v1+json':
+                result = resp.json()
+                return {file_['filename']: clean_url(file_['url']) for file_ in result['files']}
+            else:
+                parser = HTMLAnchorParser()
+                parser.feed(resp.text)
+
+                return {
+                    (urllib.parse.urlparse(url).path).split('/')[-1]: clean_url(url)
+                    for url in parser.anchors
+                }
 
 
 @dataclasses.dataclass(frozen=True)

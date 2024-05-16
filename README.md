@@ -57,15 +57,21 @@ You can set these environment variables to configure the server:
 * `PYPI_BROWSER_PYPI_URL`: URL for the PyPI server to use (defaults to
   `https://pypi.org`)
 
-  If your registry supports the pypi.org-compatible JSON API (e.g.
-  `{registry}/pypi/{package}/json`), specify your base registry URL without
-  appending `/simple` (e.g. `https://my-registry`).
+  For best results (i.e. most available metadata), choose the first option from
+  this list which is supported by your PyPI registry:
 
-  If your registry only supports the traditional HTML "simple" index, specify
-  the registry URL with `/simple` at the end (e.g.
-  `https://my-registry/simple`).
+    * If your registry supports [PEP691](pep691) JSON "simple" indexes, specify
+      your base registry URL with `/simple` appended (e.g.
+      `https://my-registry/simple`).
 
-  Note that the [PEP691][pep691] JSON-based "simple" API is not yet supported.
+    * If your registry supports the legacy pypi.org-compatible JSON API (e.g.
+      `{registry}/pypi/{package}/json`), specify your base registry URL without
+      a suffix (e.g. `https://my-registry`).
+
+    * Otherwise, if your registry only supports the traditional HTML "simple"
+      index, specify the registry URL with `/simple` at the end (e.g.
+      `https://my-registry/simple`).
+
 
 * `PYPI_BROWSER_PACKAGE_CACHE_PATH`: Filesystem path to use for caching
   downloaded files. This will grow forever (the app does not clean it up) so
