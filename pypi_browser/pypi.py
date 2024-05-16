@@ -18,7 +18,7 @@ from pypi_browser import packaging
 class PythonRepository(abc.ABC):
 
     @abc.abstractmethod
-    async def files_for_package(self, package_name: str) -> typing.Dict[str, str]:
+    async def files_for_package(self, package_name: str) -> dict[str, str]:
         """Return mapping from filename to file URL for files in a package."""
 
 
@@ -41,7 +41,7 @@ class SimpleRepository(PythonRepository):
     # TODO: Also handle PEP691 JSON simple repositories.
     pypi_url: str
 
-    async def files_for_package(self, package_name: str) -> typing.Dict[str, str]:
+    async def files_for_package(self, package_name: str) -> dict[str, str]:
         async with httpx.AsyncClient() as client:
             resp = await client.get(
                 f'{self.pypi_url}/{package_name}',
@@ -67,7 +67,7 @@ class LegacyJsonRepository(PythonRepository):
     """Non-standardized JSON API compatible with pypi.org's /pypi/*/json endpoints."""
     pypi_url: str
 
-    async def files_for_package(self, package_name: str) -> typing.Dict[str, str]:
+    async def files_for_package(self, package_name: str) -> dict[str, str]:
         async with httpx.AsyncClient() as client:
             resp = await client.get(
                 f'{self.pypi_url}/pypi/{package_name}/json',
@@ -92,9 +92,9 @@ class PackageDoesNotExist(Exception):
     pass
 
 
-async def files_by_version(config: PyPIConfig, package: str) -> typing.Dict[str | None, typing.Set[str]]:
+async def files_by_version(config: PyPIConfig, package: str) -> dict[str | None, set[str]]:
     ret = collections.defaultdict(set)
-    for filename in  await config.repo.files_for_package(package):
+    for filename in await config.repo.files_for_package(package):
         try:
             version = packaging.guess_version_from_filename(filename)
         except ValueError:

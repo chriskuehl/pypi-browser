@@ -13,7 +13,8 @@ from types import TracebackType
 
 
 # Copied from distlib/wheel.py
-WHEEL_FILENAME_RE = re.compile(r'''
+WHEEL_FILENAME_RE = re.compile(
+    r'''
 (?P<nm>[^-]+)
 -(?P<vn>\d+[^-]*)
 (-(?P<bn>\d+[^-]*))?
@@ -21,7 +22,8 @@ WHEEL_FILENAME_RE = re.compile(r'''
 -(?P<bi>\w+)
 -(?P<ar>\w+(\.\w+)*)
 \.whl$
-''', re.IGNORECASE | re.VERBOSE)
+''', re.IGNORECASE | re.VERBOSE,
+)
 
 
 def pep426_normalize(package_name: str) -> str:
@@ -92,7 +94,7 @@ class PackageEntry:
     size: int
 
 
-def _package_entries_from_zipfile(path: str) -> typing.Set[PackageEntry]:
+def _package_entries_from_zipfile(path: str) -> set[PackageEntry]:
     with zipfile.ZipFile(path) as zf:
         return {
             PackageEntry(
@@ -105,7 +107,7 @@ def _package_entries_from_zipfile(path: str) -> typing.Set[PackageEntry]:
         }
 
 
-def _package_entries_from_tarball(path: str) -> typing.Set[PackageEntry]:
+def _package_entries_from_tarball(path: str) -> set[PackageEntry]:
     with tarfile.open(path) as tf:
         return {
             PackageEntry(
@@ -130,9 +132,9 @@ class AsyncArchiveFile:
 
     async def __aexit__(
         self,
-        exc_t: typing.Optional[typing.Type[BaseException]],
-        exc_v: typing.Optional[BaseException],
-        exc_tb: typing.Optional[TracebackType],
+        exc_t: type[BaseException] | None,
+        exc_v: BaseException | None,
+        exc_tb: TracebackType | None,
     ) -> None:
         await asyncio.to_thread(self.file_.close)
 
@@ -171,7 +173,7 @@ class Package:
             path=path,
         )
 
-    async def entries(self) -> typing.Set[PackageEntry]:
+    async def entries(self) -> set[PackageEntry]:
         if self.package_format is PackageFormat.ZIPFILE:
             return await asyncio.to_thread(_package_entries_from_zipfile, self.path)
         elif self.package_format is PackageFormat.TARBALL:
