@@ -19,3 +19,24 @@ html {
 .page-package-file-archive-path .codeview pre {
     font-size: 14px;
 }
+
+.anchor-row {
+    position: relative;
+}
+
+.anchor-row a {
+    display: none;
+    padding-right: 5px;
+    text-decoration: none;
+    color: #bbb;
+}
+
+.anchor-row a:hover {
+    color: #999;
+}
+
+.anchor-row:hover a {
+    position: absolute;
+    right: 100%;
+    display: inline;
+}

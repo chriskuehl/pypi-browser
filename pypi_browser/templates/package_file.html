@@ -36,10 +36,14 @@
                 </a>
             </caption>
             {% for key, values in metadata.items()|sort %}
+                {% set anchor_id = key|anchorize %}
                 {% for value in values %}
-                    <tr>
+                    <tr class="anchor-row">
                         {% if loop.index == 1 %}
-                            <th rowspan="{{values|length}}">{{key}}</th>
+                            <th rowspan="{{values|length}}">
+                                <a id="{{anchor_id}}" href="#{{anchor_id}}" aria-hidden="true">🔗</a>
+                                {{key}}
+                            </th>
                         {% endif %}
                         <td class="font-monospace">{{value}}</td>
                     </tr>

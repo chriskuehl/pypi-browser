@@ -95,6 +95,11 @@ def _pluralize(n: int) -> str:
     return '' if n == 1 else 's'
 
 
+def _anchorize(title: str) -> str:
+    """Convert metadata title into HTML anchor ID."""
+    return re.sub(r'\-+', '-', re.sub(r'[^a-z0-9]', '-', title.lower()))
+
+
 def _human_size(size: int) -> str:
     if size >= ONE_GB:
         return f'{size / ONE_GB:.1f} GiB'
@@ -108,6 +113,7 @@ def _human_size(size: int) -> str:
 
 templates.env.filters['human_size'] = _human_size
 templates.env.filters['pluralize'] = _pluralize
+templates.env.filters['anchorize'] = _anchorize
 templates.env.globals['pypi_browser_version'] = importlib.metadata.version('pypi-browser-webapp')
 
 
