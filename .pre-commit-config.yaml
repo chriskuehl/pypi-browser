@@ -1,7 +1,7 @@
 exclude: '^pypi_browser/static/bootstrap'
 repos:
 -   repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.6.0
+    rev: v5.0.0
     hooks:
     -   id: trailing-whitespace
     -   id: end-of-file-fixer
@@ -10,8 +10,8 @@ repos:
     -   id: double-quote-string-fixer
     -   id: name-tests-test
     -   id: requirements-txt-fixer
--   repo: https://github.com/asottile/reorder_python_imports
-    rev: v3.12.0
+-   repo: https://github.com/asottile/reorder-python-imports
+    rev: v3.14.0
     hooks:
     -   id: reorder-python-imports
         args: ['--py39-plus']
@@ -20,15 +20,15 @@ repos:
     hooks:
     -   id: add-trailing-comma
 -   repo: https://github.com/asottile/pyupgrade
-    rev: v3.15.2
+    rev: v3.19.1
     hooks:
     -   id: pyupgrade
         args: ['--py310-plus']
 -   repo: https://github.com/hhatto/autopep8
-    rev: v2.1.0
+    rev: v2.3.2
     hooks:
     -   id: autopep8
 -   repo: https://github.com/PyCQA/flake8
-    rev: 7.0.0
+    rev: 7.1.1
     hooks:
     -   id: flake8
