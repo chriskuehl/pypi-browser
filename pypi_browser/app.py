@@ -118,7 +118,7 @@ templates.env.globals['pypi_browser_version'] = importlib.metadata.version('pypi
 
 
 async def home(request: Request) -> Response:
-    return templates.TemplateResponse('home.html', {'request': request})
+    return templates.TemplateResponse(request, 'home.html')
 
 
 async def package(request: Request) -> Response:
@@ -150,9 +150,9 @@ async def package(request: Request) -> Response:
             reverse=True,
         )
         return templates.TemplateResponse(
+            request,
             'package.html',
             {
-                'request': request,
                 'package': package_name,
                 'version_to_files': version_to_files_sorted,
                 'total_files': len(set(itertools.chain.from_iterable(version_to_files.values()))),
@@ -219,9 +219,9 @@ async def package_file(request: Request) -> Response:
         metadata = {}
 
     return templates.TemplateResponse(
+        request,
         'package_file.html',
         {
-            'request': request,
             'package': package_name,
             'package_is_tarball': package.package_format is PackageFormat.TARBALL,
             'filename': file_name,
@@ -336,9 +336,9 @@ async def package_file_archive_path(request: Request) -> Response:
                 lexer = pygments.lexers.special.TextLexer(stripnl=False)
 
             return templates.TemplateResponse(
+                request,
                 'package_file_archive_path.html',
                 {
-                    'request': request,
                     'package': package_name,
                     'package_is_tarball': package.package_format is PackageFormat.TARBALL,
                     'filename': file_name,
@@ -359,9 +359,9 @@ async def package_file_archive_path(request: Request) -> Response:
         else:
             # Case 2: too long to syntax highlight.
             return templates.TemplateResponse(
+                request,
                 'package_file_archive_path.html',
                 {
-                    'request': request,
                     'package': package_name,
                     'package_is_tarball': package.package_format is PackageFormat.TARBALL,
                     'filename': file_name,
@@ -373,9 +373,9 @@ async def package_file_archive_path(request: Request) -> Response:
 
     # Case 3: link to binary
     return templates.TemplateResponse(
+        request,
         'package_file_archive_path.html',
         {
-            'request': request,
             'package': package_name,
             'package_is_tarball': package.package_format is PackageFormat.TARBALL,
             'filename': file_name,
